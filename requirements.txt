@@ -5,4 +5,5 @@ Django
 djangorestframework 
 django-filter
 django-cors-headers
+pymysql             
 mysqlclient
