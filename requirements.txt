@@ -6,4 +6,4 @@ djangorestframework
 django-filter
 django-cors-headers
 pymysql             
-mysqlclient
+mysqlclient>=2.2.1
