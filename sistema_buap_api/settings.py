@@ -3,17 +3,17 @@ import dj_database_url # Necesario para procesar la DATABASE_URL de Render
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 🔑 SECRET_KEY: Ahora lee del entorno con un fallback para desarrollo.
+# SECRET_KEY: Ahora lee del entorno con un fallback para desarrollo.
 # Mantén la clave secreta en variables de entorno en producción
 SECRET_KEY = os.environ.get(
     'SECRET_KEY',
     '-_&+lsebec(whhw!%n@ww&1j=4-^j_if9x8$q778+99oz&!ms2'
 )
 
-# 🐞 DEBUG: Controlado por variable de entorno. Debe ser False en producción.
+# DEBUG: Controlado por variable de entorno. Debe ser False en producción.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True' # True en desarrollo
 
-# 🌐 ALLOWED_HOSTS: Cargados desde el entorno.
+#  ALLOWED_HOSTS: Cargados desde el entorno.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
