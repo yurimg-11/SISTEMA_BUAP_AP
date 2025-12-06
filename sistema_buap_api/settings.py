@@ -1,19 +1,19 @@
 import os
-import dj_database_url # Importación necesaria para procesar la variable DATABASE_URL
+import dj_database_url # Necesario para procesar la DATABASE_URL de Render
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-#  SECRET_KEY: Lee del entorno. Usa el valor anterior como fallback solo para desarrollo local.
+# 🔑 SECRET_KEY: Ahora lee del entorno con un fallback para desarrollo.
 # Mantén la clave secreta en variables de entorno en producción
 SECRET_KEY = os.environ.get(
     'SECRET_KEY',
     '-_&+lsebec(whhw!%n@ww&1j=4-^j_if9x8$q778+99oz&!ms2'
 )
 
-# DEBUG: Lee del entorno. Debe ser False en producción por seguridad.
+# 🐞 DEBUG: Controlado por variable de entorno. Debe ser False en producción.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True' # True en desarrollo
 
-#  ALLOWED_HOSTS: Lee del entorno. Usa 'localhost,127.0.0.1' como fallback para desarrollo.
+# 🌐 ALLOWED_HOSTS: Cargados desde el entorno.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
@@ -54,9 +54,7 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") # Descomentar para producción/Render
-# TEMPLATES[0]["DIRS"] = [os.path.join(BASE_DIR, "templates")]
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") # Directorio para collectstatic
 
 TEMPLATES = [
     {
@@ -76,9 +74,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sistema_buap_api.wsgi.application'
 
-# DATABASES: Configuración que prioriza la variable DATABASE_URL (Render/PostgreSQL).
-if 'DATABASE_URL' in os.environ:
-    # Usar dj_database_url para parsear la URL de conexión (típico en Render)
+# ====================================================================
+# LÓGICA DE BASE DE DATOS PARA RENDER (Soluciona el error de MySQL)
+# ====================================================================
+
+# Detecta si estamos en el entorno de Render
+IS_RENDER_DEPLOY = os.environ.get('RENDER') is not None
+
+if IS_RENDER_DEPLOY:
+    # Render (PostgreSQL): usa DATABASE_URL, o una URL temporal si aún no está lista.
+    # Esto asegura que el backend de MySQL NUNCA se cargue durante la construcción.
+    DATABASE_URL_DEFAULT = os.environ.get(
+        'DATABASE_URL',
+        # URL temporal con motor postgres para evitar el ImproperlyConfigured
+        'postgres://user:pass@host:5432/dbname_placeholder'
+    )
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True,
+            default=DATABASE_URL_DEFAULT
+        )
+    }
+
+elif 'DATABASE_URL' in os.environ:
+    # Otros entornos de producción que usan DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
@@ -87,7 +107,7 @@ if 'DATABASE_URL' in os.environ:
         )
     }
 else:
-    # Configuración de MySQL para desarrollo local/Google App Engine
+    # Desarrollo local (MySQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -97,6 +117,8 @@ else:
             }
         }
     }
+# ====================================================================
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -111,7 +133,6 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
